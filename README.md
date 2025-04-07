@@ -2,6 +2,18 @@
 
 Welcome to the CLM project! 
 
+## Web Interface
+
+CLM includes a modern web interface for managing models, datasets, and training jobs. The platform makes it easy to manage your continual learning experiments through an intuitive dashboard.
+
+![CLM Dashboard](frontend/docs/screenshots/dashboard.png)
+
+The web interface provides:
+- Model management for registering and tracking trained models
+- Dataset organization for preparing training data
+- Training job monitoring with real-time progress tracking
+- Support for multiple continual learning strategies
+
 ## Getting Started
 
 1. Check out the examples to see how to use the framework
