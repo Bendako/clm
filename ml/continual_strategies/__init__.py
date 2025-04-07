@@ -5,6 +5,7 @@ from ml.continual_strategies.gem import GradientEpisodicMemory
 from ml.continual_strategies.pnn import ProgressiveNetworks, ProgressiveNeuralNetwork
 from ml.continual_strategies.packnet import PackNet
 from ml.continual_strategies.er_plus import ERPlus
+from ml.continual_strategies.generative_replay import GenerativeReplay
 
 __all__ = [
     'ContinualStrategy',
@@ -15,5 +16,6 @@ __all__ = [
     'ProgressiveNetworks',
     'ProgressiveNeuralNetwork',
     'PackNet',
-    'ERPlus'
+    'ERPlus',
+    'GenerativeReplay'
 ] 

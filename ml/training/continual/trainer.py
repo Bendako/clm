@@ -31,7 +31,8 @@ from ml.continual_strategies import (
     ProgressiveNetworks,
     ProgressiveNeuralNetwork,
     PackNet,
-    ERPlus
+    ERPlus,
+    GenerativeReplay
 )
 from ml.replay_buffers.reservoir_sampling import ReservoirBuffer, TensorReservoirBuffer
 
@@ -179,6 +180,7 @@ class ContinualTrainer:
         """Set up continual learning strategies based on configuration."""
         self.strategy = None
         self.replay_buffer = None
+        self.generator_model = None
         
         # Get strategy configuration
         strategy_config = self.config.get("continual_strategy", {})
@@ -190,6 +192,7 @@ class ContinualTrainer:
         pnn_config = strategy_config.get("pnn", {"enabled": False})
         packnet_config = strategy_config.get("packnet", {"enabled": False})
         er_plus_config = strategy_config.get("er_plus", {"enabled": False})
+        generative_replay_config = strategy_config.get("generative_replay", {"enabled": False})
         
         # Choose strategy (only one active at a time)
         if ewc_config.get("enabled", False):
@@ -281,6 +284,74 @@ class ContinualTrainer:
                 batch_size=batch_size,
                 reg_weight=reg_weight,
                 temperature=temperature,
+                task_balanced=task_balanced,
+                device=self.device
+            )
+        elif generative_replay_config.get("enabled", False):
+            # Import here to avoid circular imports
+            from ml.models.vae import VAE, ConvVAE
+            
+            # Extract Generative Replay parameters
+            memory_size = generative_replay_config.get("memory_size", 500)
+            batch_size = generative_replay_config.get("batch_size", 32)
+            replay_weight = generative_replay_config.get("replay_weight", 1.0)
+            generator_update_freq = generative_replay_config.get("generator_update_freq", 5)
+            task_balanced = generative_replay_config.get("task_balanced", True)
+            
+            # Get generator configuration
+            generator_config = self.config.get("generator", {})
+            generator_type = generator_config.get("type", "vae")
+            
+            # Create generator model based on data type
+            if generator_type == "vae":
+                # For MLP-like (flat) data
+                # Determine input size from model
+                if hasattr(self.model, "input_dim"):
+                    input_dim = self.model.input_dim
+                elif hasattr(self.model, "input_size"):
+                    input_dim = self.model.input_size
+                else:
+                    # Default for MNIST flattened
+                    input_dim = 784
+                    logger.warning(f"Could not determine input dimension, using default: {input_dim}")
+                
+                hidden_dims = generator_config.get("hidden_dims", [256, 128])
+                latent_dim = generator_config.get("latent_dim", 32)
+                dropout = generator_config.get("dropout", 0.1)
+                
+                logger.info(f"Creating VAE generator with input_dim={input_dim}, latent_dim={latent_dim}")
+                self.generator_model = VAE(
+                    input_dim=input_dim,
+                    hidden_dims=hidden_dims,
+                    latent_dim=latent_dim,
+                    dropout=dropout
+                )
+            elif generator_type == "conv_vae":
+                # For image data
+                channels = generator_config.get("channels", 1)
+                img_size = generator_config.get("img_size", 28)
+                hidden_dims = generator_config.get("hidden_dims", [32, 64, 128])
+                latent_dim = generator_config.get("latent_dim", 32)
+                
+                logger.info(f"Creating ConvVAE generator with img_size={img_size}, channels={channels}")
+                self.generator_model = ConvVAE(
+                    channels=channels,
+                    img_size=img_size,
+                    hidden_dims=hidden_dims,
+                    latent_dim=latent_dim
+                )
+            else:
+                raise ValueError(f"Unknown generator type: {generator_type}")
+            
+            # Create Generative Replay strategy
+            logger.info(f"Enabling Generative Replay with memory_size={memory_size}, replay_weight={replay_weight}")
+            self.strategy = GenerativeReplay(
+                model=self.model,
+                generator=self.generator_model,
+                memory_size=memory_size,
+                batch_size=batch_size,
+                replay_weight=replay_weight,
+                generator_update_freq=generator_update_freq,
                 task_balanced=task_balanced,
                 device=self.device
             )

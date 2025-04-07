@@ -1,0 +1,90 @@
+# Configuration for training with Generative Replay strategy
+# This config uses a VAE to generate synthetic samples of previous tasks
+
+# Model configuration
+model:
+  type: "mlp"  # Model type (mlp or cnn)
+  # For MLP model
+  hidden_sizes: [256, 128]
+  dropout: 0.2
+  # For CNN model (if used)
+  # channels: 1
+  # img_size: 28
+  # kernel_size: 3
+  # padding: 1
+
+# Generator (VAE) configuration
+generator:
+  type: "vae"  # Generator type (vae or conv_vae)
+  # For VAE
+  hidden_dims: [256, 128]
+  latent_dim: 32
+  dropout: 0.1
+  # For ConvVAE (if used)
+  # channels: 1
+  # img_size: 28
+  # hidden_dims: [32, 64, 128]
+  # latent_dim: 32
+
+# Training configuration
+training:
+  epochs: 5
+  batch_size: 64
+  optimizer:
+    type: "adam"
+    lr: 0.001
+    weight_decay: 0.0001
+  scheduler:
+    enabled: false
+    type: "step"
+    step_size: 1
+    gamma: 0.9
+
+# Continual learning strategy configuration
+continual_strategy:
+  # Disable other strategies
+  ewc:
+    enabled: false
+  lwf:
+    enabled: false
+  gem:
+    enabled: false
+  pnn:
+    enabled: false
+  packnet:
+    enabled: false
+  er_plus:
+    enabled: false
+    
+  # Enable Generative Replay
+  generative_replay:
+    enabled: true
+    memory_size: 500        # Size of replay buffer for training the generator
+    batch_size: 32          # Batch size for sampling from replay buffer
+    replay_weight: 1.0      # Weight for the replay loss
+    generator_update_freq: 5  # How often to update the generator (in iterations)
+    task_balanced: true     # Whether to balance samples across tasks
+  
+  # Regular replay buffer (optional, for comparison)
+  replay:
+    enabled: false
+    buffer_size: 500
+    task_balanced: true
+
+# Evaluation configuration
+evaluation:
+  metrics: ["accuracy", "forgetting"]
+  frequency: 1  # Evaluate after every task
+  save_model: true  # Save model after training on each task
+
+# Logging configuration
+logging:
+  level: "info"  # Logging level (debug, info, warning, error)
+  log_gradients: false
+  log_parameters: false
+
+# Experiment tracking
+experiment:
+  name: "generative_replay_experiment"
+  tags: ["generative_replay", "continual_learning", "vae"]
+  notes: "Experiment using Generative Replay with VAE for continual learning on MNIST tasks." 
