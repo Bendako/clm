@@ -27,7 +27,10 @@ from ml.continual_strategies import (
     NoStrategy,
     ElasticWeightConsolidation, 
     LearningWithoutForgetting,
-    GradientEpisodicMemory
+    GradientEpisodicMemory,
+    ProgressiveNetworks,
+    ProgressiveNeuralNetwork,
+    PackNet
 )
 from ml.replay_buffers.reservoir_sampling import ReservoirBuffer, TensorReservoirBuffer
 
@@ -183,6 +186,8 @@ class ContinualTrainer:
         ewc_config = strategy_config.get("ewc", {"enabled": False})
         lwf_config = strategy_config.get("lwf", {"enabled": False})
         gem_config = strategy_config.get("gem", {"enabled": False})
+        pnn_config = strategy_config.get("pnn", {"enabled": False})
+        packnet_config = strategy_config.get("packnet", {"enabled": False})
         
         # Choose strategy (only one active at a time)
         if ewc_config.get("enabled", False):
@@ -224,6 +229,38 @@ class ContinualTrainer:
                 memory_size=memory_size,
                 samples_per_task=samples_per_task,
                 margin=margin,
+                device=self.device
+            )
+        elif pnn_config.get("enabled", False):
+            # Extract PNN parameters
+            input_size = pnn_config.get("input_size")
+            hidden_sizes = pnn_config.get("hidden_sizes")
+            output_size = pnn_config.get("output_size")
+            lateral_connections = pnn_config.get("lateral_connections", True)
+            
+            # Create PNN strategy
+            logger.info(f"Enabling Progressive Neural Networks with lateral_connections={lateral_connections}")
+            self.strategy = ProgressiveNetworks(
+                model=self.model,
+                input_size=input_size,
+                hidden_sizes=hidden_sizes,
+                output_size=output_size,
+                lateral_connections=lateral_connections,
+                device=self.device
+            )
+        elif packnet_config.get("enabled", False):
+            # Extract PackNet parameters
+            prune_percentage = packnet_config.get("prune_percentage", 0.75)
+            prune_threshold = packnet_config.get("prune_threshold", 0.001)
+            use_magnitude_pruning = packnet_config.get("use_magnitude_pruning", True)
+            
+            # Create PackNet strategy
+            logger.info(f"Enabling PackNet with prune_percentage={prune_percentage}")
+            self.strategy = PackNet(
+                model=self.model,
+                prune_percentage=prune_percentage,
+                prune_threshold=prune_threshold,
+                use_magnitude_pruning=use_magnitude_pruning,
                 device=self.device
             )
         else:
@@ -419,7 +456,46 @@ class ContinualTrainer:
             self.optimizer.zero_grad()
             
             # Forward pass
-            outputs = self.model(inputs)
+            try:
+                # Print input type for debugging
+                logger.info(f"Input type: {type(inputs)}")
+                
+                if isinstance(inputs, list):
+                    # For this example, we know the list should contain two tensors (inputs, targets)
+                    if len(inputs) >= 2 and all(isinstance(item, torch.Tensor) for item in inputs[:2]):
+                        logger.info(f"List contains tensors, treating as [inputs, targets]")
+                        inputs, targets = inputs[0], inputs[1]
+                        inputs = inputs.to(self.device)
+                        targets = targets.to(self.device)
+                    else:
+                        logger.info(f"Converting list to tensor")
+                        inputs = torch.tensor(inputs, dtype=torch.long, device=self.device)
+                elif isinstance(inputs, tuple) and len(inputs) >= 2:
+                    input_data, target_data = inputs[0], inputs[1]
+                    if isinstance(input_data, torch.Tensor):
+                        inputs = input_data.to(self.device)
+                    if isinstance(target_data, torch.Tensor):
+                        targets = target_data.to(self.device)
+                elif not isinstance(inputs, torch.Tensor):
+                    logger.info(f"Non-tensor input detected: {type(inputs)}")
+                elif inputs.device != self.device:
+                    inputs = inputs.to(self.device)
+                
+                logger.info(f"Final input type: {type(inputs)}")
+                if isinstance(inputs, torch.Tensor):
+                    logger.info(f"Input shape: {inputs.shape}, dtype: {inputs.dtype}")
+                    
+                outputs = self.model(inputs)
+            except Exception as e:
+                logger.error(f"Error in forward pass: {e}")
+                logger.error(f"Input type: {type(inputs)}")
+                if isinstance(inputs, torch.Tensor):
+                    logger.error(f"Input shape: {inputs.shape}, dtype: {inputs.dtype}")
+                elif isinstance(inputs, list) and inputs:
+                    logger.error(f"List length: {len(inputs)}, first element type: {type(inputs[0])}")
+                    if isinstance(inputs[0], torch.Tensor):
+                        logger.error(f"First tensor shape: {inputs[0].shape}")
+                raise
             
             # Compute standard loss
             if isinstance(outputs, tuple):
@@ -535,6 +611,27 @@ class ContinualTrainer:
                     targets = None
                 
                 # Forward pass
+                if isinstance(inputs, list):
+                    # For this example, we know the list should contain two tensors (inputs, targets)
+                    if len(inputs) >= 2 and all(isinstance(item, torch.Tensor) for item in inputs[:2]):
+                        logger.info(f"List contains tensors, treating as [inputs, targets]")
+                        inputs, targets = inputs[0], inputs[1]
+                        inputs = inputs.to(self.device)
+                        targets = targets.to(self.device)
+                    else:
+                        logger.info(f"Converting list to tensor")
+                        inputs = torch.tensor(inputs, dtype=torch.long, device=self.device)
+                elif isinstance(inputs, tuple) and len(inputs) >= 2:
+                    input_data, target_data = inputs[0], inputs[1]
+                    if isinstance(input_data, torch.Tensor):
+                        inputs = input_data.to(self.device)
+                    if isinstance(target_data, torch.Tensor):
+                        targets = target_data.to(self.device)
+                elif not isinstance(inputs, torch.Tensor):
+                    logger.info(f"Non-tensor input detected: {type(inputs)}")
+                elif inputs.device != self.device:
+                    inputs = inputs.to(self.device)
+                
                 outputs = self.model(inputs)
                 
                 # Compute loss
