@@ -154,6 +154,16 @@ After training on each task, PackNet prunes a portion of the least important wei
 
 This creates task-specific binary masks that protect important weights for each previously learned task while allowing new tasks to utilize the pruned portions of the network.
 
+### Visualization
+
+See the [screenshots directory](./screenshots/) for visualizations of PackNet in action:
+
+- **Parameter Usage**: Shows how PackNet efficiently reuses parameters across tasks
+- **Task Accuracies**: Demonstrates that the strategy prevents forgetting of previous tasks
+- **Forgetting Measure**: Quantifies the amount of forgetting between tasks
+
+![Parameter Usage](./screenshots/packnet_parameter_usage.png)
+
 ### Mathematical Formulation
 For a network with weights $\theta$, PackNet defines a binary mask $M_t$ for each task $t$:
 
