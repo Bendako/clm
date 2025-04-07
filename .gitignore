@@ -96,4 +96,7 @@ temp/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
-$RECYCLE.BIN/ 
+$RECYCLE.BIN/
+
+# Personal learning guides and notes (Ben's specific addition)
+LEARNING_GUIDE.md 

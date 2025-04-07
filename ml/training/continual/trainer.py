@@ -30,7 +30,8 @@ from ml.continual_strategies import (
     GradientEpisodicMemory,
     ProgressiveNetworks,
     ProgressiveNeuralNetwork,
-    PackNet
+    PackNet,
+    ERPlus
 )
 from ml.replay_buffers.reservoir_sampling import ReservoirBuffer, TensorReservoirBuffer
 
@@ -188,6 +189,7 @@ class ContinualTrainer:
         gem_config = strategy_config.get("gem", {"enabled": False})
         pnn_config = strategy_config.get("pnn", {"enabled": False})
         packnet_config = strategy_config.get("packnet", {"enabled": False})
+        er_plus_config = strategy_config.get("er_plus", {"enabled": False})
         
         # Choose strategy (only one active at a time)
         if ewc_config.get("enabled", False):
@@ -261,6 +263,25 @@ class ContinualTrainer:
                 prune_percentage=prune_percentage,
                 prune_threshold=prune_threshold,
                 use_magnitude_pruning=use_magnitude_pruning,
+                device=self.device
+            )
+        elif er_plus_config.get("enabled", False):
+            # Extract ER+ parameters
+            memory_size = er_plus_config.get("memory_size", 500)
+            batch_size = er_plus_config.get("batch_size", 32)
+            reg_weight = er_plus_config.get("reg_weight", 1.0)
+            temperature = er_plus_config.get("temperature", 2.0)
+            task_balanced = er_plus_config.get("task_balanced", True)
+            
+            # Create ER+ strategy
+            logger.info(f"Enabling ER+ with memory_size={memory_size}, reg_weight={reg_weight}")
+            self.strategy = ERPlus(
+                model=self.model,
+                memory_size=memory_size,
+                batch_size=batch_size,
+                reg_weight=reg_weight,
+                temperature=temperature,
+                task_balanced=task_balanced,
                 device=self.device
             )
         else:
@@ -528,6 +549,10 @@ class ContinualTrainer:
                     self.replay_buffer.add(task_id, (inputs.detach(), targets.detach()))
                 elif isinstance(batch, dict) and "input_ids" in batch and "labels" in batch:
                     self.replay_buffer.add(task_id, (batch["input_ids"].detach(), batch["labels"].detach()))
+            
+            # Update ER+ strategy's replay buffer if using that strategy
+            if isinstance(self.strategy, ERPlus) and targets is not None:
+                self.strategy.update_replay_buffer(task_id, inputs, targets)
             
             # Update metrics
             total_loss += loss.item()

@@ -668,4 +668,141 @@ class ContinualLearningVisualizer:
                 for j in range(matrix.shape[1]):
                     ax.text(j, i, format(matrix_normalized[i, j], fmt) if matrix_normalized[i, j] > 0 else '',
                             ha="center", va="center",
-                            color="white" if matrix_normalized[i, j] > thresh else "black") 
+                            color="white" if matrix_normalized[i, j] > thresh else "black")
+    
+    def plot_strategy_comparison(
+        self,
+        accuracies: Dict[str, List[float]],
+        strategy_names: List[str],
+        task_names: List[str],
+        title: str = "Strategy Comparison",
+        figure_size: Tuple[int, int] = (12, 8),
+        save_path: Optional[str] = None
+    ) -> None:
+        """
+        Plot a comparison of different continual learning strategies.
+        
+        Args:
+            accuracies: Dictionary mapping strategy names to lists of task accuracies
+            strategy_names: Names of strategies (for the legend)
+            task_names: Names of tasks (for x-axis labels)
+            title: Plot title
+            figure_size: Size of the figure (width, height)
+            save_path: Path to save figure (if None, auto-generated)
+        """
+        plt.figure(figsize=figure_size)
+        
+        # Set width of bars
+        bar_width = 0.2
+        index = np.arange(len(task_names))
+        
+        # Plot bars for each strategy
+        for i, (strategy_key, acc_values) in enumerate(accuracies.items()):
+            plt.bar(
+                index + i * bar_width, 
+                acc_values, 
+                bar_width,
+                label=strategy_names[i] if i < len(strategy_names) else strategy_key
+            )
+        
+        # Add labels, title and legend
+        plt.xlabel('Tasks')
+        plt.ylabel('Final Accuracy')
+        plt.title(title)
+        plt.xticks(index + bar_width * (len(accuracies) - 1) / 2, task_names)
+        plt.legend()
+        plt.ylim(0, 1.0)
+        plt.grid(True, linestyle='--', alpha=0.7)
+        
+        # Add values on top of bars
+        for i, (strategy_key, acc_values) in enumerate(accuracies.items()):
+            for j, value in enumerate(acc_values):
+                plt.text(
+                    index[j] + i * bar_width, 
+                    value + 0.02, 
+                    f'{value:.2f}', 
+                    ha='center', 
+                    fontsize=9
+                )
+        
+        # Save figure
+        if save_path is None:
+            save_path = os.path.join(self.save_dir, 'strategy_comparison.png')
+        else:
+            # Ensure parent directory exists
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            
+        plt.tight_layout()
+        plt.savefig(save_path)
+        plt.close()
+        
+        logger.info(f"Saved strategy comparison plot to {save_path}")
+    
+    def plot_forgetting_comparison(
+        self,
+        forgetting_values: Dict[str, List[float]],
+        strategy_names: List[str],
+        task_names: List[str],
+        title: str = "Forgetting Comparison",
+        figure_size: Tuple[int, int] = (12, 8),
+        save_path: Optional[str] = None
+    ) -> None:
+        """
+        Plot a comparison of forgetting across different strategies.
+        
+        Lower forgetting values are better (less knowledge lost).
+        
+        Args:
+            forgetting_values: Dictionary mapping strategy names to lists of forgetting measures
+            strategy_names: Names of strategies (for the legend)
+            task_names: Names of tasks (for x-axis labels)
+            title: Plot title
+            figure_size: Size of the figure (width, height)
+            save_path: Path to save figure (if None, auto-generated)
+        """
+        plt.figure(figsize=figure_size)
+        
+        # Set width of bars
+        bar_width = 0.2
+        index = np.arange(len(task_names))
+        
+        # Plot bars for each strategy
+        for i, (strategy_key, values) in enumerate(forgetting_values.items()):
+            plt.bar(
+                index + i * bar_width, 
+                values, 
+                bar_width,
+                label=strategy_names[i] if i < len(strategy_names) else strategy_key
+            )
+        
+        # Add labels, title and legend
+        plt.xlabel('Tasks')
+        plt.ylabel('Forgetting Measure')
+        plt.title(title)
+        plt.xticks(index + bar_width * (len(forgetting_values) - 1) / 2, task_names)
+        plt.legend()
+        plt.grid(True, linestyle='--', alpha=0.7)
+        
+        # Add values on top of bars
+        for i, (strategy_key, values) in enumerate(forgetting_values.items()):
+            for j, value in enumerate(values):
+                plt.text(
+                    index[j] + i * bar_width, 
+                    value + 0.02, 
+                    f'{value:.2f}', 
+                    ha='center', 
+                    fontsize=9
+                )
+        
+        # Save figure
+        if save_path is None:
+            save_path = os.path.join(self.save_dir, 'forgetting_comparison.png')
+        else:
+            # Ensure parent directory exists
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            
+        plt.tight_layout()
+        plt.savefig(save_path)
+        plt.close()
+        
+        logger.info(f"Saved forgetting comparison plot to {save_path}") 
