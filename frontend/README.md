@@ -12,9 +12,7 @@ A comprehensive platform for managing and training models using continual learni
 ## Screenshots
 
 ### Dashboard
-_Note: Screenshots will be updated with actual application images. For now, descriptive placeholders are used._
-
-![Dashboard](docs/screenshots/dashboard.md)
+![Dashboard](docs/screenshots/dashboard.png)
 
 *The dashboard provides an overview of registered models, available datasets, active training jobs, and recent activity.*
 
