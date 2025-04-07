@@ -12,22 +12,22 @@ A comprehensive platform for managing and training models using continual learni
 ## Screenshots
 
 ### Dashboard
-![Dashboard](docs/screenshots/dashboard.txt)
+![Dashboard](docs/screenshots/dashboard.png)
 
 *The dashboard provides an overview of registered models, available datasets, active training jobs, and recent activity.*
 
 ### Models Page
-![Models](docs/screenshots/models.txt)
+![Models](docs/screenshots/models.png)
 
 *The models page allows users to browse and manage registered models, including details about architecture, parameters, and training history.*
 
 ### Datasets Page
-![Datasets](docs/screenshots/datasets.txt)
+![Datasets](docs/screenshots/datasets.png)
 
 *The datasets page displays available datasets for training, with options to filter by type, size, and other attributes.*
 
 ### Training Page
-![Training](docs/screenshots/training.txt)
+![Training](docs/screenshots/training.png)
 
 *The training page shows all training jobs with their status, progress, and performance metrics. Users can start new jobs, stop running ones, or view detailed results.*
 
