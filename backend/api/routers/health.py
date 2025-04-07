@@ -1,8 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 from typing import Dict, Any
 import psutil
 import os
 import time
+
+from db.database import get_db
+from db.utils import verify_db_connection, get_table_names
 
 router = APIRouter()
 
@@ -23,13 +27,34 @@ async def health_check() -> Dict[str, Any]:
     }
 
 @router.get("/readiness")
-async def readiness_check() -> Dict[str, str]:
+async def readiness_check(db: Session = Depends(get_db)) -> Dict[str, Any]:
     """
     Readiness probe for Kubernetes.
     Checks if all required services are available.
     """
-    # TODO: Implement actual database and service checks
-    return {"status": "ready"}
+    services_status = {
+        "api": "ready",
+        "database": "ready" if verify_db_connection() else "not_ready"
+    }
+    
+    # Check if database has tables
+    try:
+        tables = get_table_names()
+        services_status["database_tables"] = len(tables)
+    except Exception as e:
+        services_status["database"] = "error"
+        services_status["database_error"] = str(e)
+    
+    # Determine overall status
+    overall_status = "ready" if all(s == "ready" for s in 
+                                    [v for k, v in services_status.items() 
+                                     if isinstance(v, str)]) else "not_ready"
+    
+    return {
+        "status": overall_status,
+        "services": services_status,
+        "timestamp": time.time()
+    }
 
 @router.get("/liveness")
 async def liveness_check() -> Dict[str, str]:
