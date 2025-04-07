@@ -1,200 +1,174 @@
-# CLM - Continuous Learning for LLMs
+# Continual Learning for Models (CLM)
 
-A comprehensive automated on-premise system designed to update Large Language Models (LLMs) incrementally while preserving historical knowledge and mitigating catastrophic forgetting.
-
-## Overview
-
-CLM provides a "Continuously Improving LLM Brain" by automating the entire LLM update lifecycle, ensuring models improve over time without losing previously acquired knowledge. It addresses key challenges in maintaining and updating LLMs in production environments.
-
-## Key Features
-
-### Continual Learning & Memory Preservation
-
-- **Anti-Forgetting Technologies**: Advanced continual learning strategies (regularization methods, replay buffers, modular architectures) to protect vital knowledge during retraining.
-- **Replay Mechanisms**: Intelligent selection of legacy data for inclusion during model updates.
-- **Multi-Task Support**: Unified model with task-specific adapters to maintain performance across varied tasks.
-
-### Automated Pipeline & Monitoring
-
-- **CI/CD for Training**: Automated retraining workflows triggered by data thresholds or performance drift.
-- **Smart Scheduling**: Dynamic training schedules based on data volume and detected distribution shifts.
-- **Real-time Performance Tracking**: Comprehensive monitoring of model metrics across all tasks.
-- **Drift Detection**: Statistical tests to identify data, concept, and prior probability shifts.
-
-### Deployment & Rollback Safety
-
-- **Flexible Deployment Strategies**: Support for blue-green and canary deployments.
-- **One-Click Rollback**: Immediate recovery from unintended regressions.
-- **Pre-Deployment Validation**: Automated testing against historical tasks before deployment.
-
-### Transparency & Lineage
-
-- **Full Experiment Tracking**: Complete logs of training hyperparameters, data sources, and metrics.
-- **Model Registry**: Central repository of all model versions with metadata.
-- **Audit Trails**: Detailed history of model updates for regulatory compliance.
-
-## System Architecture
-
-- **Web Application**: React-based dashboard for monitoring and control.
-- **Microservices Backend**: RESTful APIs for data ingestion, training, and deployment operations.
-- **Data Layer**: 
-  - **Ingestion Service**: Handles streaming and batch data collection with metadata tagging.
-  - **Version-Controlled Storage**: Delta Lake-like system for data snapshots and change tracking.
-- **Training Pipeline**:
-  - **Orchestration**: Workflow management via Airflow or Kubeflow.
-  - **Containerized Jobs**: Reproducible training environments with Kubernetes.
-- **Model Management**:
-  - **Registry Integration**: Works with MLflow or DVC for experiment tracking.
-  - **Validation Service**: Automated testing of models against benchmarks.
-- **Deployment System**:
-  - **Container Orchestration**: Kubernetes-based deployment and scaling.
-  - **Feature Flagging**: Controls for gradual model rollout.
-
-## Project Structure
-
-```
-clm/
-├── frontend/                    # Web app frontend
-│   └── src/
-│       ├── components/          # Reusable UI components
-│       ├── pages/               # Page-level components
-│       ├── services/            # API client and services
-│       ├── utils/               # Utility functions
-│       ├── hooks/               # Custom React hooks
-│       ├── styles/              # Global styles and theming
-│       └── assets/              # Images and icons
-│
-├── backend/                     # Backend services
-│   ├── api/                     # API endpoints
-│   ├── services/                # Service implementations
-│   │   ├── data_ingestion/      # Data collection service
-│   │   ├── model_registry/      # Model registry service
-│   │   ├── training/            # Training orchestration
-│   │   ├── deployment/          # Deployment service
-│   │   └── monitoring/          # Monitoring service
-│   ├── models/                  # Data models and schemas
-│   ├── utils/                   # Shared utilities
-│   └── db/                      # Database access
-│
-├── ml/                          # ML components
-│   ├── training/                # Training pipelines
-│   ├── evaluation/              # Evaluation metrics
-│   ├── drift_detection/         # Drift detection algorithms
-│   ├── replay_buffers/          # Replay buffer implementations
-│   └── continual_learning/      # Continual learning techniques
-│       ├── regularization/      # Regularization methods
-│       ├── modular/             # Modular architectures
-│       ├── replay/              # Replay strategies
-│       └── distillation/        # Knowledge distillation
-│
-├── config/                      # Configuration files
-│
-├── infra/                       # Infrastructure as code
-│   ├── docker/                  # Docker configurations
-│   ├── k8s/                     # Kubernetes manifests
-│   └── terraform/               # Terraform configurations
-│
-├── scripts/                     # Utility scripts
-│
-├── docs/                        # Documentation
-│   ├── architecture/            # System architecture
-│   ├── api/                     # API documentation
-│   ├── user-guides/             # User documentation
-│   └── development/             # Development guides
-│
-├── tests/                       # Test suite
-│   ├── unit/                    # Unit tests
-│   ├── integration/             # Integration tests
-│   └── e2e/                     # End-to-end tests
-│
-└── notebooks/                   # Jupyter notebooks
-    ├── exploration/             # Data exploration
-    ├── models/                  # Model development
-    ├── evaluation/              # Model evaluation
-    └── demo/                    # Demo notebooks
-```
-
-## Requirements
-
-- Docker and Kubernetes for containerization
-- Airflow/Kubeflow for workflow orchestration
-- MLflow/DVC for experiment tracking
-- React for frontend development
-- Python 3.8+ for backend services
-- CUDA-compatible hardware for model training
-
-## Development Setup
-
-### Prerequisites
-
-1. Install [Docker](https://www.docker.com/get-started)
-2. Install [Kubernetes](https://kubernetes.io/docs/setup/) or [Minikube](https://minikube.sigs.k8s.io/docs/start/) for local development
-3. Clone this repository:
-   ```
-   git clone https://github.com/yourusername/clm.git
-   cd clm
-   ```
-
-### Building the System
-
-1. Set up infrastructure components:
-   ```
-   ./scripts/setup/setup-infrastructure.sh
-   ```
-
-2. Configure database connections:
-   ```
-   cp config/template.env config/.env
-   # Edit config/.env with your settings
-   ```
-
-3. Build and deploy services:
-   ```
-   docker-compose up -d
-   ```
+Welcome to the CLM project! 
 
 ## Getting Started
 
-1. Access the web dashboard at `http://localhost:8080`
-2. Configure your first LLM model in the Model Registry
-3. Set up data sources through the Data Ingestion dashboard
-4. Define retraining triggers and validation criteria
-5. Launch your first training pipeline
+1. Check out the examples to see how to use the framework
+2. Refer to specific component documentation for detailed implementation details
 
-## Usage
+## What is Continual Learning?
 
-### Managing Models
+This project is building a framework for **continual learning** - a way for AI models to learn new tasks without forgetting previous ones.
 
-- **Registering Models**: Upload model artifacts and metadata through the Model Registry screen.
-- **Comparing Versions**: Use the comparison tool to evaluate differences between model versions.
-- **Deploying Models**: Select a model version and deployment strategy in the Deployment screen.
+## The Problem We're Solving
 
-### Configuring Training
+Regular machine learning models have a big problem: when you train them on a new task, they tend to "forget" what they learned before (called **catastrophic forgetting**). Imagine if you learned Spanish and then started learning French, but in the process completely forgot all your Spanish!
 
-- **Data Selection**: Choose data sources and sampling strategies for training.
-- **Hyperparameter Configuration**: Set model-specific training parameters.
-- **Scheduling**: Define automatic retraining triggers based on data volume or drift thresholds.
+## What We've Built So Far
 
-### Monitoring Performance
+1. **Replay Buffer** (Reservoir Sampling)
+   - Works like a memory system that stores important examples from previous tasks
+   - When learning new tasks, it occasionally reviews these old examples
+   - Think of it like reviewing flashcards from previous lessons while learning new material
 
-- **Real-time Metrics**: View current model performance across all tasks.
-- **Drift Detection**: Monitor for changes in data distribution that might affect model performance.
-- **Alert Configuration**: Set up notifications for performance degradation or drift detection.
+2. **Continual Learning Strategies**
+   - **EWC** (Elastic Weight Consolidation): Identifies which parts of the model are important for old tasks and protects them from big changes
+   - **LwF** (Learning without Forgetting): Uses the model's old behavior as a guide when learning new things
+   - **GEM** (Gradient Episodic Memory): Makes sure learning new tasks doesn't harm performance on old tasks
+   - **PNN** (Progressive Neural Networks): Creates a new network for each task while enabling knowledge transfer
+   - **PackNet**: Uses network pruning to efficiently pack multiple tasks into a single network
+
+3. **Trainer System**
+   - Manages the whole training process across multiple tasks
+   - Integrates the strategies and replay buffer
+   - Handles saving/loading models, tracking progress, etc.
+
+4. **Evaluation Framework**
+   - Measures how well the model maintains performance on old tasks
+   - Tracks metrics like "forgetting" and "knowledge transfer" between tasks
+   - Creates visualizations to understand model behavior
+
+5. **Example Usage**
+   - Demonstrated how all these components work together on synthetic language tasks
+
+## Featured Strategy: PackNet
+
+PackNet is our latest implemented strategy that efficiently packs multiple tasks into a single network using iterative pruning. After training on each task, it:
+
+1. Identifies and freezes important weights for the current task
+2. Prunes less important weights to free up capacity
+3. Uses the freed capacity for learning new tasks
+
+### Parameter Efficiency
+
+The visualization below shows how PackNet efficiently reuses parameters across tasks:
+
+![PackNet Parameter Usage](docs/screenshots/packnet_parameter_usage.png)
+
+### Catastrophic Forgetting Prevention
+
+PackNet successfully maintains performance on previously learned tasks:
+
+![PackNet Task Performance](docs/screenshots/packnet_task_accuracies.png)
+
+For more details and visualizations, see the [strategies documentation](docs/strategies.md) and [screenshots](docs/screenshots/).
+
+## In Simple Terms
+
+We've built a system that allows AI models to learn continuously, like humans do, by using memory systems (replay buffers) and special training techniques (continual strategies) that protect important knowledge while still allowing flexibility to learn new things.
+
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/clm.git
+cd clm
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+## Quick Start
+
+```python
+from ml.training.continual import ContinualTrainer
+from ml.continual_strategies import EWC, LwF, GEM, PackNet
+import torch.nn as nn
+
+# Initialize your model
+model = nn.Sequential(...)  # Your model architecture
+
+# Option 1: Using EWC, LwF, or GEM
+trainer = ContinualTrainer(
+    model=model,
+    config={
+        "optimizer": {"type": "adam", "lr": 0.001},
+        "continual_strategy": {
+            "ewc": {
+                "enabled": True,
+                "lambda": 100.0
+            }
+        }
+    }
+)
+
+# Option 2: Using PackNet
+trainer = ContinualTrainer(
+    model=model,
+    config={
+        "optimizer": {"type": "adam", "lr": 0.001},
+        "continual_strategy": {
+            "packnet": {
+                "enabled": True,
+                "prune_percentage": 0.75,  # 75% of weights pruned per task
+                "use_magnitude_pruning": True
+            }
+        }
+    }
+)
+
+# Train on multiple tasks sequentially
+for task_id, (train_loader, val_loader) in enumerate(task_data):
+    trainer.train_task(
+        train_loader=train_loader,
+        val_loader=val_loader,
+        task_id=task_id,
+        task_name=f"task_{task_id}",
+        num_epochs=10
+    )
+```
+
+For a complete example, see `examples/packnet_example.py`.
+
+## Project Structure
+
+The codebase is organized as follows:
+
+- `ml/replay_buffers/`: Implementation of memory systems for storing past examples
+- `ml/continual_strategies/`: Implementation of continual learning algorithms
+- `ml/training/`: Trainers for managing the learning process
+- `ml/evaluation/`: Tools for measuring continual learning performance
+- `examples/`: Example usage of the framework
+- `tests/`: Unit and integration tests
+- `docs/`: Detailed documentation
+
+## Documentation
+
+- For detailed API documentation, see `docs/api.md`
+- For examples and tutorials, check the `examples/` directory
+- For implementation details of strategies, see `docs/strategies.md`
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome contributions! Please follow these steps:
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run the tests (`pytest tests/`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to your branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+## Requirements
+
+- Python 3.8+
+- PyTorch 1.8+
+- NumPy
+- MLflow (for experiment tracking)
+- pytest (for running tests)
 
 ## License
 
-This project is licensed under the MIT License.
-
----
-
-For the full detailed plan of the CLM system, please refer to the comprehensive documentation in `docs/clm.md`. 
+This project is open-source and available under the MIT License. 
