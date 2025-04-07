@@ -1,0 +1,28 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Optional: Install CUDA dependencies if GPU training is required
+# Uncomment when GPU support is needed
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     cuda-libraries-11-0 \
+#     && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements file
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the source code
+COPY . .
+
+# Command to run training jobs
+# In actual usage, this will likely be overridden by the orchestration system
+CMD ["python", "-m", "ml.training.run_training"] 

@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # Frontend Web App
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: ../infra/docker/Dockerfile.frontend
+    ports:
+      - "8080:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    volumes:
+      - ../../frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+  # Backend API Service
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: ../infra/docker/Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DB_HOST=postgres
+      - MODEL_REGISTRY_PATH=/data/model_registry
+      - EXPERIMENT_TRACKING_URI=http://mlflow:5000
+    volumes:
+      - ../../backend:/app
+      - model_registry_data:/data/model_registry
+    depends_on:
+      - postgres
+      - mlflow
+
+  # ML Training Service
+  ml-training:
+    build:
+      context: ../../ml
+      dockerfile: ../infra/docker/Dockerfile.training
+    environment:
+      - EXPERIMENT_TRACKING_URI=http://mlflow:5000
+      - DB_HOST=postgres
+      - REPLAY_BUFFER_SIZE=10000
+    volumes:
+      - ../../ml:/app
+      - model_registry_data:/data/model_registry
+      - training_data:/data/training_data
+    depends_on:
+      - mlflow
+      - postgres
+
+  # Database
+  postgres:
+    image: postgres:14
+    environment:
+      - POSTGRES_USER=clm_user
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=clm_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # MLflow for Experiment Tracking
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.3.1
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=postgresql://clm_user:postgres@postgres:5432/clm_db
+      - MLFLOW_ARTIFACT_ROOT=/mlflow/artifacts
+    volumes:
+      - mlflow_data:/mlflow/artifacts
+    command: mlflow server --host 0.0.0.0 --backend-store-uri postgresql://clm_user:postgres@postgres:5432/clm_db --default-artifact-root /mlflow/artifacts
+    depends_on:
+      - postgres
+
+  # Airflow for Training Orchestration (optional for first phase)
+  # Uncomment when needed
+  # airflow:
+  #   image: apache/airflow:2.5.0
+  #   ports:
+  #     - "8081:8080"
+  #   environment:
+  #     - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+  #     - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://clm_user:postgres@postgres:5432/airflow
+  #   volumes:
+  #     - ../../scripts/airflow/dags:/opt/airflow/dags
+  #   depends_on:
+  #     - postgres
+
+volumes:
+  postgres_data:
+  model_registry_data:
+  training_data:
+  mlflow_data: 
