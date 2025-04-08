@@ -3,6 +3,25 @@ import Link from "next/link";
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 -m-6">
+      {/* Header */}
+      <header className="w-full py-4 px-6 md:px-10">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <span className="text-xl font-bold text-gray-900 dark:text-white">CLM</span>
+          </div>
+          <div>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+              aria-label="Go to dashboard"
+              tabIndex={0}
+            >
+              Go to Dashboard
+            </Link>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
       <section className="pt-20 pb-16 px-6 md:px-10 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
